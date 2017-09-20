@@ -19,6 +19,8 @@ struct CalculatorBrain {
         case equals
     }
     
+    var resultIsPending = false
+    
     private var operations: Dictionary<String,Operation> = [
         "π" : Operation.constant(Double.pi),
         "e" : Operation.constant(M_E),
@@ -47,11 +49,18 @@ struct CalculatorBrain {
                 }
             case .binaryOperation(let function):
                 if accumulator != nil {
+                    if resultIsPending {
+                        performPendingBinaryOperation()
+                    }
                     pendingBinaryOperation = PendingBinaryOperation(function: function, firstOperand: accumulator!)
-                    accumulator = nil
+                    if resultIsPending == false {
+                        accumulator = nil
+                    }
+                    resultIsPending = true
                 }
             case .equals:
                 performPendingBinaryOperation()
+                resultIsPending = false
             }
         }
     }
