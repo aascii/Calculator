@@ -23,14 +23,19 @@ class ViewController: UIViewController {
         
         if userIsInTheMiddleOfTyping {
             if displayEntries < displayLength {
-                let textCurrentlyInDisplay = display.text!
-                display.text = textCurrentlyInDisplay + digit
+                if (digit != "." || (digit == "." && (display.text!.contains(".") == false))) {
+                    let textCurrentlyInDisplay = display.text!
+                    display.text = textCurrentlyInDisplay + digit
+                    displayEntries += 1
+                }
             }
         } else {
-            display.text = digit
-            userIsInTheMiddleOfTyping = true
+            if digit != "." {
+                display.text = digit
+                userIsInTheMiddleOfTyping = true
+                displayEntries += 1
+            }
         }
-        displayEntries += 1
     }
     
     var displayValue: Double {
