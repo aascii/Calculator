@@ -56,7 +56,7 @@ struct CalculatorBrain {
             case .unaryOperation(let function):
                 if accumulator.value != nil {
                     if resultIsPending != nil {
-                        let charsToRemove = String(accumulator.value!).count
+                        let charsToRemove = String(accumulator.value!).characters.count
                         let rangeToRemove = accumulator.history.index(accumulator.history.endIndex, offsetBy: -charsToRemove)..<accumulator.history.endIndex
                         accumulator.history.removeSubrange(rangeToRemove)
                         accumulator.history = accumulator.history + String(symbol) + "(" + String(accumulator.value!) + ")"
