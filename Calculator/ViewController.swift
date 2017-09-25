@@ -23,6 +23,13 @@ class ViewController: UIViewController {
     let displayLength = 16
     /// Element tracking current "input" operand string length
     var displayEntries = 0
+    /// Element tracking number of "input" operand decimal places to allow "0" vales after "."
+    var displayDecimalPlacesUsed = 0
+    
+    /// Constants for formatting display elements
+    let maxIntDigits = 9
+    let minFracDigits = 0
+    let maxFracDigits = 6
     
     /// Catches and handles numerical button actions in preparation to set operand
     /// Note:  Does NOT modify brain properties
@@ -33,9 +40,36 @@ class ViewController: UIViewController {
             if displayEntries < displayLength {
                 if (digit != "." || (digit == "." && (display.text!.contains(".") == false))) {
                     let textCurrentlyInDisplay = display.text!
-                    display.text = textCurrentlyInDisplay + digit
-                    displayEntries += 1
+                    let rawStringValue = textCurrentlyInDisplay + digit
+                    switch digit {
+                    case ".":
+                        display.text = rawStringValue
+                        displayDecimalPlacesUsed = 0
+                    case "0":
+                        if display.text!.contains(".") && displayDecimalPlacesUsed < maxFracDigits {
+                            display.text = rawStringValue
+                            displayDecimalPlacesUsed += 1
+                        } else {
+                            fallthrough
+                        }
+                    default:
+                        let formatTextInDisplay = NumberFormatter()
+                        formatTextInDisplay.maximumIntegerDigits = maxIntDigits
+                        formatTextInDisplay.minimumFractionDigits = minFracDigits
+                        formatTextInDisplay.maximumFractionDigits = maxFracDigits
+                        let formattedTextNumber = formatTextInDisplay.number(from: rawStringValue)
+                        let formattedText = formatTextInDisplay.string(from: formattedTextNumber!)
+                        if display.text!.contains(".") && displayDecimalPlacesUsed < maxFracDigits {
+                            display.text = formattedText!
+                            displayDecimalPlacesUsed += 1
+                        } else if display.text!.contains(".") == false {
+                            display.text = formattedText!
+                        } else {
+                            break
+                        }
+                    }
                 }
+                displayEntries += 1
             }
         } else {
             if digit != "." {
@@ -45,6 +79,7 @@ class ViewController: UIViewController {
             } else {
                 display.text = "0" + digit
                 userIsInTheMiddleOfTyping = true
+                displayDecimalPlacesUsed = 0
                 displayEntries += 2
             }
         }
@@ -58,7 +93,16 @@ class ViewController: UIViewController {
         // Refreshes the "result" UI with updated value
         // Note: this is the action which triggers the screen refresh
         set {
-            display.text = String(newValue)
+            // noformat            display.text = String(newValue)
+            let rawStringValue = String(newValue)
+            let formatTextInDisplay = NumberFormatter()
+            formatTextInDisplay.maximumIntegerDigits = 9
+            formatTextInDisplay.minimumFractionDigits = 0
+            formatTextInDisplay.maximumFractionDigits = 6
+            if let formattedTextNumber = formatTextInDisplay.number(from: rawStringValue) {
+                let formattedText = formatTextInDisplay.string(from: formattedTextNumber)
+                display.text = formattedText!
+            }
         }
     }
     
