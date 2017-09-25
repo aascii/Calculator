@@ -39,9 +39,19 @@ class ViewController: UIViewController {
         if userIsInTheMiddleOfTyping {
             if displayEntries < displayLength {
                 if (digit != "." || (digit == "." && (display.text!.contains(".") == false))) {
-                    let textCurrentlyInDisplay = display.text!
+                    var textCurrentlyInDisplay = display.text!
                     let rawStringValue = textCurrentlyInDisplay + digit
                     switch digit {
+                    case "⬅︎":
+                        textCurrentlyInDisplay.remove(at: textCurrentlyInDisplay.index(before: textCurrentlyInDisplay.endIndex))
+                        if textCurrentlyInDisplay == "" {
+                            textCurrentlyInDisplay = "0"
+                        }
+                        display.text = textCurrentlyInDisplay
+                        displayEntries -= 2
+                        if textCurrentlyInDisplay.contains(".") {
+                            displayDecimalPlacesUsed -= 1
+                        }
                     case ".":
                         display.text = rawStringValue
                         displayDecimalPlacesUsed = 0
@@ -72,15 +82,18 @@ class ViewController: UIViewController {
                 displayEntries += 1
             }
         } else {
-            if digit != "." {
-                display.text = digit
-                userIsInTheMiddleOfTyping = true
-                displayEntries += 1
-            } else {
+            switch digit {
+            case ".":
                 display.text = "0" + digit
                 userIsInTheMiddleOfTyping = true
                 displayDecimalPlacesUsed = 0
                 displayEntries += 2
+            case "⬅︎":
+                break
+            default:
+                display.text = digit
+                userIsInTheMiddleOfTyping = true
+                displayEntries += 1
             }
         }
     }
