@@ -16,6 +16,7 @@ struct CalculatorBrain {
     /// Types of things the calculator can perform
     private enum Operation {
         case constant(Double)
+        case random
         case unaryOperation((Double) -> Double)
         case binaryOperation((Double,Double) -> Double)
         case equals
@@ -26,6 +27,7 @@ struct CalculatorBrain {
     var resultIsPending: String?
     
     private var operations: Dictionary<String,Operation> = [
+        "RND" : Operation.random,
         "π" : Operation.constant(Double.pi),
         "e" : Operation.constant(M_E),
         "√" : Operation.unaryOperation(sqrt),
@@ -46,6 +48,15 @@ struct CalculatorBrain {
     mutating func performOperation(_ symbol: String) {
         if let operation = operations[symbol] {
             switch operation {
+            case .random:
+                let maxPossibleNum = Double(UInt32.max)
+                let arc4randomNum = Double(arc4random())
+                accumulator.value = arc4randomNum / maxPossibleNum
+                if resultIsPending != nil {
+                    accumulator.history += symbol
+                } else {
+                    accumulator.history = symbol
+                }
             case .constant(let numericalValue):
                 accumulator.value = numericalValue
                 if resultIsPending != nil {
