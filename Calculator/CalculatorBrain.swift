@@ -10,7 +10,7 @@ import Foundation
 
 struct CalculatorBrain {
     
-    /// Latest result of calculation along with a history of operands and operations
+    /// Latest result of calculation along with history of operands & operations
     private var accumulator: (value: Double?,history: String) = (nil, "")
     
     /// Types of things the calculator can perform
@@ -67,12 +67,20 @@ struct CalculatorBrain {
             case .unaryOperation(let function):
                 if accumulator.value != nil {
                     if resultIsPending != nil {
-                        let charsToRemove = String(accumulator.value!).characters.count
-                        let rangeToRemove = accumulator.history.index(accumulator.history.endIndex, offsetBy: -charsToRemove)..<accumulator.history.endIndex
+                        let charsToRemove =
+                            String(accumulator.value!).characters.count
+                        let rangeToRemove =
+                            accumulator.history.index(
+                                accumulator.history.endIndex,
+                                offsetBy: -charsToRemove
+                                )..<accumulator.history.endIndex
                         accumulator.history.removeSubrange(rangeToRemove)
-                        accumulator.history = accumulator.history + String(symbol) + "(" + String(accumulator.value!) + ")"
+                        accumulator.history =
+                            accumulator.history + String(symbol) + "(" +
+                            String(accumulator.value!) + ")"
                     } else {
-                        accumulator.history = String(symbol) + "(" + accumulator.history + ")"
+                        accumulator.history = String(symbol) + "(" +
+                            accumulator.history + ")"
                     }
                     accumulator.value = function(accumulator.value!)
                 }
@@ -106,7 +114,8 @@ struct CalculatorBrain {
     /// Closes operation by clearing pending status
     private mutating func performPendingBinaryOperation() {
         if pendingBinaryOperation != nil && accumulator.value != nil {
-            accumulator.value = pendingBinaryOperation!.perform(with: accumulator.value!)
+            accumulator.value =
+                pendingBinaryOperation!.perform(with: accumulator.value!)
             pendingBinaryOperation = nil
         }
     }
@@ -124,7 +133,7 @@ struct CalculatorBrain {
         }
     }
     
-    /// Sets the accumulator with passed-in operand and records in historical log
+    /// Sets accumulator w/ passed-in operand, then records in historical log
     mutating func setOperand(_ operand: Double) {
         accumulator.value = operand
         if resultIsPending != nil {

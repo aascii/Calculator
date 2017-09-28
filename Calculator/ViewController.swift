@@ -13,7 +13,7 @@ class ViewController: UIViewController {
     /// Element used for operand input as well as displaying operation results
     /// Note: AKA "input UI" || "results UI"
     @IBOutlet weak var display: UILabel!
-    /// Element used for displaying the running historical log of operand and operations
+    /// Element used for displaying running historical log of operand+operations
     /// Note: AKA "history UI"
     @IBOutlet weak var inputHistoryDisplay: UILabel!
     
@@ -23,7 +23,8 @@ class ViewController: UIViewController {
     let displayLength = 16
     /// Element tracking current "input" operand string length
     var displayEntries = 0
-    /// Element tracking number of "input" operand decimal places to allow "0" vales after "."
+    /// Element tracking number of "input" operand decimal places
+    /// to allow "0" vales after "."
     var displayDecimalPlacesUsed = 0
     
     /// Constants for formatting display elements
@@ -31,14 +32,16 @@ class ViewController: UIViewController {
     let minFracDigits = 0
     let maxFracDigits = 6
     
-    /// Catches and handles numerical button actions in preparation to set operand
+    /// Catches & handles numerical button actions in preparation to set operand
     /// Note:  Does NOT modify brain properties
     @IBAction func touchDigit(_ sender: UIButton) {
         let digit = sender.currentTitle!
         
         if userIsInTheMiddleOfTyping {
             if displayEntries < displayLength {
-                if (digit != "." || (digit == "." && (display.text!.contains(".") == false))) {
+                if (digit != "." ||
+                    (digit == "." && (display.text!.contains(".") == false))
+                    ) {
                     var textCurrentlyInDisplay = display.text!
                     let rawStringValue = textCurrentlyInDisplay + digit
                     switch digit {
@@ -56,7 +59,8 @@ class ViewController: UIViewController {
                         display.text = rawStringValue
                         displayDecimalPlacesUsed = 0
                     case "0":
-                        if display.text!.contains(".") && displayDecimalPlacesUsed < maxFracDigits {
+                        if display.text!.contains(".") &&
+                            displayDecimalPlacesUsed < maxFracDigits {
                             display.text = rawStringValue
                             displayDecimalPlacesUsed += 1
                         } else {
@@ -69,7 +73,8 @@ class ViewController: UIViewController {
                         formatTextInDisplay.maximumFractionDigits = maxFracDigits
                         let formattedTextNumber = formatTextInDisplay.number(from: rawStringValue)
                         let formattedText = formatTextInDisplay.string(from: formattedTextNumber!)
-                        if display.text!.contains(".") && displayDecimalPlacesUsed < maxFracDigits {
+                        if display.text!.contains(".") &&
+                            displayDecimalPlacesUsed < maxFracDigits {
                             display.text = formattedText!
                             displayDecimalPlacesUsed += 1
                         } else if display.text!.contains(".") == false {
