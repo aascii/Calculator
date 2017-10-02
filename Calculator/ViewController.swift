@@ -71,7 +71,8 @@ class ViewController: UIViewController {
                         formatTextInDisplay.maximumIntegerDigits = maxIntDigits
                         formatTextInDisplay.minimumFractionDigits = minFracDigits
                         formatTextInDisplay.maximumFractionDigits = maxFracDigits
-                        let formattedTextNumber = formatTextInDisplay.number(from: rawStringValue)
+                        let formattedTextNumber =
+                            formatTextInDisplay.number(from: rawStringValue)
                         let formattedText = formatTextInDisplay.string(from: formattedTextNumber!)
                         if display.text!.contains(".") &&
                             displayDecimalPlacesUsed < maxFracDigits {
