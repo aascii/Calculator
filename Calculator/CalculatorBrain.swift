@@ -21,7 +21,7 @@ private enum Entries {
 private var stack = [Entries]()
 
 /// Optional collection of stored variable names and matching values
-private var variablesInMemory: [String: Double]? = nil
+private var variablesInMemory: [String: Double] = [:]
 
 struct CalculatorBrain {
     
@@ -51,54 +51,37 @@ struct CalculatorBrain {
         "+" : Operation.binaryOperation({ $0 + $1 }),
         "−" : Operation.binaryOperation({ $0 - $1 }),
         "=" : Operation.equals,
-        "∁" : Operation.clearHistory
-    ]
-    
-    /// DEPRECATE
-    /// Stores "..." while in the middle of an operation; otherwise nil
-    var resultIsPending: String?
+        "∁" : Operation.clearHistory,
+        ]
     
     /// Inserts a mathematical operation onto the stack & runs the ALU if enough
     /// operands are available; or in the case of a binary operation with second
     /// operand not available yet, queues a pending operation.
     mutating func performOperation(_ symbol: String) {
         stack.append(Entries.opcode(symbol))
-        results = evaluate(using: variablesInMemory)
-        if results.isPending {
-            resultIsPending = "..."
-        } else {
-            resultIsPending = nil
-        }
     }
     
     /// Inserts operand into stack
     /// Note: this setOperand takes an unlabeled Double
     mutating func setOperand(_ operand: Double) {
         stack.append(Entries.number(operand))
-        results = evaluate(using: variablesInMemory)
-        if results.isPending {
-            resultIsPending = "..."
-        } else {
-            resultIsPending = nil
-        }
     }
     
     /// Inserts operand into stack
     /// Note: this setOperand takes a labelled String, ie a mathematical variable
     mutating func setOperand(variable named: String) {
         stack.append(Entries.mathvariable(named))
-        results = evaluate(using: variablesInMemory)
-        if results.isPending {
-            resultIsPending = "..."
-        } else {
-            resultIsPending = nil
-        }
     }
     
     /// Performs all the mathematical operations possible given the stack and
     /// a dictionary of mathematical variable names and values
-    func evaluate(using variables: Dictionary<String,Double>? = nil)
+    func evaluate(using variables: [String: Double]? = nil)
         -> (result: Double?, isPending: Bool, description: String){
+            if variables != nil {
+                for (key, value) in variables! {
+                    variablesInMemory[key] = value
+                }
+            }
             if stack.isEmpty == false {
                 var result: Double?
                 var isPending = false
@@ -137,13 +120,9 @@ struct CalculatorBrain {
                     /// attempt to evaluate with an assigned variable
                     case .mathvariable(let stackVariable):
                         var keyValue: Double
-                        if let substituteValues = variablesInMemory {
-                            if let substituteValue =
-                                substituteValues[stackVariable] {
-                                keyValue = substituteValue
-                            } else {
-                                keyValue = 0
-                            }
+                        if let substituteValue =
+                            variablesInMemory[stackVariable] {
+                            keyValue = substituteValue
                         } else {
                             keyValue = 0
                         }
@@ -248,6 +227,7 @@ struct CalculatorBrain {
                                 if result != nil {
                                     if isPending {
                                         performPendingBinaryOperation()
+                                        secondOperand = nil
                                     }
                                     pendingBinaryOperation =
                                         PendingBinaryOperation(
@@ -265,6 +245,7 @@ struct CalculatorBrain {
                             case .equals:
                                 if pendingBinaryOperation != nil {
                                     performPendingBinaryOperation()
+                                    secondOperand = nil
                                 }
                                 isPending = false
                                 pendingBinaryOperation = nil
@@ -276,6 +257,7 @@ struct CalculatorBrain {
                                 description = " "
                                 isPending = false
                                 stack = []
+                                variablesInMemory = [:]
                                 pendingBinaryOperation = nil
                                 secondOperand = nil
                                 subExpression = ""
@@ -318,6 +300,7 @@ struct CalculatorBrain {
     /// Accumulator value as a Double if not nil
     var result: Double? {
         get {
+            let results = evaluate(using: nil)
             return results.result
         }
     }
@@ -325,7 +308,23 @@ struct CalculatorBrain {
     /// Accumulator history as a String if not nil
     var history: String? {
         get {
+            let results = evaluate(using: nil)
             return results.description
+        }
+    }
+    
+    /// DEPRECATE
+    /// Stores "..." while in the middle of an operation; otherwise nil
+    var resultIsPending: String? {
+        get {
+            let results = evaluate(using: nil)
+            var resultPendingValue: String?
+            if results.isPending {
+                resultPendingValue = "..."
+            } else {
+                resultPendingValue = nil
+            }
+            return resultPendingValue
         }
     }
 }

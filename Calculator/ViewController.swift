@@ -17,6 +17,8 @@ class ViewController: UIViewController {
     /// Note: AKA "history UI"
     @IBOutlet weak var inputHistoryDisplay: UILabel!
     
+    @IBOutlet weak var mathVariableDisplay: UILabel!
+    
     var userIsInTheMiddleOfTyping = false
     
     /// Character limit of "input" UI
@@ -137,6 +139,26 @@ class ViewController: UIViewController {
         }
     }
     
+    var displayMathVariableValue: Double {
+        // Returns the prepared operand value from "math variable" UI
+        get {
+            return Double(mathVariableDisplay.text!)!
+        }
+        // Refreshes the "math variable" UI with updated value
+        // Note: this is the action which triggers the screen refresh
+        set {
+            let rawStringValue = String(newValue)
+            let formatTextInDisplay = NumberFormatter()
+            formatTextInDisplay.maximumIntegerDigits = 9
+            formatTextInDisplay.minimumFractionDigits = 0
+            formatTextInDisplay.maximumFractionDigits = 6
+            if let formattedTextNumber = formatTextInDisplay.number(from: rawStringValue) {
+                let formattedText = formatTextInDisplay.string(from: formattedTextNumber)
+                mathVariableDisplay.text = formattedText!
+            }
+        }
+    }
+    
     /// Create calculator ALU, including the accumulator
     private var brain: CalculatorBrain = CalculatorBrain()
     
@@ -144,27 +166,92 @@ class ViewController: UIViewController {
     /// constants, operators, reset (AKA Clear button)
     @IBAction func performOperation(_ sender: UIButton) {
         if userIsInTheMiddleOfTyping {
-            // store a new value in the accumulator
+            // store a new value on the stack
             brain.setOperand(displayValue)
             userIsInTheMiddleOfTyping = false
         }
         if let mathematicalSymbol = sender.currentTitle {
             brain.performOperation(mathematicalSymbol)
         }
-        // if the accumulator is empty, reset the calculator to start state
+        let results = brain.evaluate(using: nil)
+        // if brain stack is empty, reset the calculator display to start state.
         // otherwise, since we are at the end of performOperation,
         //     trigger the screen refresh(es)
-        if let result = brain.result {
+        if let result = results.result {
             displayValue = result
-            displayHistoryValue = brain.history! + (brain.resultIsPending ?? "=")
+            displayHistoryValue = results.description
+            if results.isPending {
+                displayHistoryValue += "..."
+            } else {
+                displayHistoryValue += "="
+            }
             displayEntries = 0
+            
         } else {
             display.text = "0"
-            displayHistoryValue = "0"
+            displayHistoryValue = " "
             displayEntries = 0
         }
     }
     
+    @IBAction func insertMathVariable(_ sender: UIButton) {
+        let mathVariable = sender.currentTitle!
+        
+        if userIsInTheMiddleOfTyping {
+            userIsInTheMiddleOfTyping = false
+        }
+        brain.setOperand(variable: mathVariable)
+        let results = brain.evaluate(using: nil)
+
+        
+        // if brain stack is empty, reset the calculator display to start state.
+        // otherwise, trigger the screen refresh(es)
+        if let result = results.result {
+            displayValue = result
+            displayHistoryValue = results.description
+            if results.isPending {
+                displayHistoryValue += "..."
+            } else {
+                displayHistoryValue += "="
+            }
+            displayEntries = 0
+            
+        } else {
+            display.text = "0"
+            displayHistoryValue = " "
+            displayEntries = 0
+        }
+    }
     
+    @IBAction func setMathVariableValue(_ sender: UIButton) {
+        let button = sender.currentTitle!
+        let mathVariable = String(button.suffix(1))
+        
+        if userIsInTheMiddleOfTyping {
+            userIsInTheMiddleOfTyping = false
+        }
+        
+        displayMathVariableValue = displayValue
+
+        let results = brain.evaluate(using: [mathVariable: displayValue])
+        
+        // if brain stack is empty, reset the calculator display to start state.
+        // otherwise, trigger the screen refresh(es)
+        if let result = results.result {
+            displayValue = result
+            displayHistoryValue = results.description
+            if results.isPending {
+                displayHistoryValue += "..."
+            } else {
+                displayHistoryValue += "="
+            }
+            displayEntries = 0
+            
+        } else {
+            display.text = "0"
+            displayHistoryValue = " "
+            displayEntries = 0
+        }
+    }
 }
 
