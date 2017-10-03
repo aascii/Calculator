@@ -198,7 +198,7 @@ class ViewController: UIViewController {
     @IBAction func setMathVariableValue(_ sender: UIButton) {
         let button = sender.currentTitle!
         let mathVariable = String(button.substring(from:
-            button.index(button.endIndex, offsetBy: -2)))
+            button.index(button.endIndex, offsetBy: -1)))
         
         if userIsInTheMiddleOfTyping {
             userIsInTheMiddleOfTyping = false
@@ -228,6 +228,10 @@ class ViewController: UIViewController {
         // otherwise, since we are at the end of evaluation,
         //     trigger the screen refresh(es)
         screenRefresh(results)
+    }
+    
+    @IBAction func clearMemoryDisplay(_ sender: UIButton) {
+        displayMathVariableValue = 0
     }
     
     private func screenRefresh(_ results:
