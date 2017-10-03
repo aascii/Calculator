@@ -47,7 +47,7 @@ class ViewController: UIViewController {
                     var textCurrentlyInDisplay = display.text!
                     let rawStringValue = textCurrentlyInDisplay + digit
                     switch digit {
-                    case "⬅︎":
+                    case "⬅︎", "Undo":
                         textCurrentlyInDisplay.remove(at: textCurrentlyInDisplay.index(before: textCurrentlyInDisplay.endIndex))
                         if textCurrentlyInDisplay == "" {
                             textCurrentlyInDisplay = "0"
@@ -96,7 +96,7 @@ class ViewController: UIViewController {
                 userIsInTheMiddleOfTyping = true
                 displayDecimalPlacesUsed = 0
                 displayEntries += 2
-            case "⬅︎":
+            case "⬅︎", "Undo":
                 break
             default:
                 display.text = digit
@@ -175,23 +175,9 @@ class ViewController: UIViewController {
         }
         let results = brain.evaluate(using: nil)
         // if brain stack is empty, reset the calculator display to start state.
-        // otherwise, since we are at the end of performOperation,
+        // otherwise, since we are at the end of evaluation,
         //     trigger the screen refresh(es)
-        if let result = results.result {
-            displayValue = result
-            displayHistoryValue = results.description
-            if results.isPending {
-                displayHistoryValue += "..."
-            } else {
-                displayHistoryValue += "="
-            }
-            displayEntries = 0
-            
-        } else {
-            display.text = "0"
-            displayHistoryValue = " "
-            displayEntries = 0
-        }
+        screenRefresh(results)
     }
     
     @IBAction func insertMathVariable(_ sender: UIButton) {
@@ -206,21 +192,7 @@ class ViewController: UIViewController {
         
         // if brain stack is empty, reset the calculator display to start state.
         // otherwise, trigger the screen refresh(es)
-        if let result = results.result {
-            displayValue = result
-            displayHistoryValue = results.description
-            if results.isPending {
-                displayHistoryValue += "..."
-            } else {
-                displayHistoryValue += "="
-            }
-            displayEntries = 0
-            
-        } else {
-            display.text = "0"
-            displayHistoryValue = " "
-            displayEntries = 0
-        }
+        screenRefresh(results)
     }
     
     @IBAction func setMathVariableValue(_ sender: UIButton) {
@@ -237,6 +209,28 @@ class ViewController: UIViewController {
         
         // if brain stack is empty, reset the calculator display to start state.
         // otherwise, trigger the screen refresh(es)
+        screenRefresh(results)
+    }
+    
+    @IBAction func setUndoAction(_ sender: UIButton) {
+        if userIsInTheMiddleOfTyping {
+            // already handled by touchDigit()
+            return
+        }
+        if let mathematicalSymbol = sender.currentTitle {
+            brain.performOperation(mathematicalSymbol)
+        }
+        // run twice to mark, then execute, any "undo" action
+        var results = brain.evaluate(using: nil)
+        results = brain.evaluate(using: nil)
+        // if brain stack is empty, reset the calculator display to start state.
+        // otherwise, since we are at the end of evaluation,
+        //     trigger the screen refresh(es)
+        screenRefresh(results)
+    }
+    
+    private func screenRefresh(_ results:
+        (result: Double?, isPending: Bool, description: String)) {
         if let result = results.result {
             displayValue = result
             displayHistoryValue = results.description

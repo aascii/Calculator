@@ -14,6 +14,7 @@ private enum Entries {
     case number(Double)
     case opcode(String)
     case mathvariable(String)
+    case remove
 }
 
 /// Array of elements representing a mathematical formula
@@ -33,6 +34,7 @@ struct CalculatorBrain {
         case binaryOperation((Double,Double) -> Double)
         case equals
         case clearHistory
+        case undo
     }
     
     private var operations: Dictionary<String,Operation> = [
@@ -52,7 +54,8 @@ struct CalculatorBrain {
         "−" : Operation.binaryOperation({ $0 - $1 }),
         "=" : Operation.equals,
         "∁" : Operation.clearHistory,
-        ]
+        "Undo" : Operation.undo
+    ]
     
     /// Inserts a mathematical operation onto the stack & runs the ALU if enough
     /// operands are available; or in the case of a binary operation with second
@@ -117,6 +120,11 @@ struct CalculatorBrain {
                 /// operators for evaluation, executing results in-line
                 for (index,stackEntry) in stack.enumerated() {
                     switch stackEntry {
+                    /// clear entry from previous .undo
+                    case .remove:
+                        stack.remove(at: (index + 1))
+                        stack.remove(at: index)
+                        return (result, isPending, description)
                     /// attempt to evaluate with an assigned variable
                     case .mathvariable(let stackVariable):
                         var keyValue: Double
@@ -151,6 +159,14 @@ struct CalculatorBrain {
                     case .opcode(let stackOpcode):
                         if let operation = operations[stackOpcode] {
                             switch operation {
+                            case .undo:
+                                if index > 0 {
+                                stack[index] = .remove
+                                stack[(index - 1)] = .remove
+                                } else {
+                                    stack = []
+                                    return (result, isPending, description)
+                                }
                             case .random:
                                 let maxPossibleNum = Double(UInt32.max)
                                 let arc4randomNum = Double(arc4random())
@@ -185,6 +201,10 @@ struct CalculatorBrain {
                                             let previousEntry = stack[index - 1]
                                             var lastEntry = ""
                                             switch previousEntry {
+                                            case .remove:
+                                                // should never be here!
+                                                description = "error!"
+                                                break
                                             case .opcode(let previousString):
                                                 lastEntry = previousString
                                                 charsToRemove =
@@ -194,7 +214,8 @@ struct CalculatorBrain {
                                                     formatEntry(previousNumber)
                                                 charsToRemove =
                                                     lastEntry.characters.count
-                                            case .mathvariable(let previousVariable):
+                                            case
+                                            .mathvariable(let previousVariable):
                                                 lastEntry = previousVariable
                                                 charsToRemove =
                                                     lastEntry.characters.count
@@ -284,7 +305,8 @@ struct CalculatorBrain {
         formatTextFromStack.maximumFractionDigits = 6
         if let formattedTextNumber =
             formatTextFromStack.number(from: rawStringValue) {
-            let formattedText = formatTextFromStack.string(from: formattedTextNumber)
+            let formattedText =
+                formatTextFromStack.string(from: formattedTextNumber)
             return formattedText!
         } else {
             return "error"

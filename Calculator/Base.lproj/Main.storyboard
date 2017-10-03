@@ -64,7 +64,8 @@
                                                             <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                                         </state>
                                                         <connections>
-                                                            <action selector="performOperation:" destination="BYZ-38-t0r" eventType="touchUpInside" id="eme-0w-EBr"/>
+                                                            <action selector="setUndoAction:" destination="BYZ-38-t0r" eventType="touchUpInside" id="NhP-Kr-9df"/>
+                                                            <action selector="touchDigit:" destination="BYZ-38-t0r" eventType="touchUpInside" id="WwG-aE-wLe"/>
                                                         </connections>
                                                     </button>
                                                     <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="CPp-pf-cHo">
