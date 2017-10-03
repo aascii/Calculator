@@ -203,7 +203,7 @@ struct CalculatorBrain {
                                             switch previousEntry {
                                             case .remove:
                                                 // should never be here!
-                                                description = "error!"
+                                                description = "'undo' bug!"
                                                 break
                                             case .opcode(let previousString):
                                                 lastEntry = previousString
@@ -309,7 +309,7 @@ struct CalculatorBrain {
                 formatTextFromStack.string(from: formattedTextNumber)
             return formattedText!
         } else {
-            return "error"
+            return "format bug!"
         }
     }
     

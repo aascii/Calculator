@@ -197,7 +197,8 @@ class ViewController: UIViewController {
     
     @IBAction func setMathVariableValue(_ sender: UIButton) {
         let button = sender.currentTitle!
-        let mathVariable = String(button.suffix(1))
+        let mathVariable = String(button.substring(from:
+            button.index(button.endIndex, offsetBy: -2)))
         
         if userIsInTheMiddleOfTyping {
             userIsInTheMiddleOfTyping = false
@@ -205,7 +206,7 @@ class ViewController: UIViewController {
         
         displayMathVariableValue = displayValue
 
-        let results = brain.evaluate(using: [mathVariable: displayValue])
+        let results = brain.evaluate(using: [mathVariable!: displayValue])
         
         // if brain stack is empty, reset the calculator display to start state.
         // otherwise, trigger the screen refresh(es)
