@@ -24,6 +24,11 @@ private var stack = [Entries]()
 /// Optional collection of stored variable names and matching values
 private var variablesInMemory: [String: Double] = [:]
 
+enum NumericalError: Error {
+    case notANumber
+    case infinite
+}
+
 struct CalculatorBrain {
     
     /// Types of operations the calculator can perform
@@ -79,19 +84,21 @@ struct CalculatorBrain {
     /// Performs all the mathematical operations possible given the stack and
     /// a dictionary of mathematical variable names and values
     func evaluate(using variables: [String: Double]? = nil)
-        -> (result: Double?, isPending: Bool, description: String){
+        -> (result: Double?, isPending: Bool, description: String, error: String?){
             if variables != nil {
                 for (key, value) in variables! {
                     variablesInMemory[key] = value
                 }
             }
             if stack.isEmpty == false {
+                
                 var result: Double?
                 var isPending = false
                 var description = " "
                 var secondOperand: Double? = nil
                 var subExpressionDepth = 0
                 var subExpression = ""
+                var errorDescription: String?
                 
                 /// Stores pending operator with its first operand
                 var pendingBinaryOperation: PendingBinaryOperation?
@@ -100,19 +107,34 @@ struct CalculatorBrain {
                 struct PendingBinaryOperation {
                     let function: (Double,Double) -> Double
                     let firstOperand: Double
+                    let opcode: String
                     
                     func perform(with secondOperand: Double) -> Double {
                         return function(firstOperand, secondOperand)
                     }
                 }
-                /// Returns result of pending binary operation:
-                /// Runs ALU clock on the pending operation with contents from
-                /// pending operation struct and accumulator;
-                /// Closes operation by clearing pending status
-                func performPendingBinaryOperation() {
-                    result =
-                        pendingBinaryOperation!.perform(with: secondOperand!)
-                    pendingBinaryOperation = nil
+                
+                func reportUnaryError(with numericalValue: Double) throws
+                    -> Double {
+                    if numericalValue.isNaN {
+                        throw NumericalError.notANumber
+                    }
+                    if numericalValue.isInfinite {
+                        throw NumericalError.infinite
+                    }
+                    return numericalValue
+                }
+                
+                func reportBinaryError(with numericalValue: Double) throws
+                    -> Double {
+                        let resultValue = pendingBinaryOperation!.perform(with: numericalValue)
+                        if resultValue.isNaN {
+                            throw NumericalError.notANumber
+                        }
+                        if resultValue.isInfinite {
+                            throw NumericalError.infinite
+                        }
+                        return resultValue
                 }
                 
                 /// Represents main loop of calculator brain
@@ -124,7 +146,7 @@ struct CalculatorBrain {
                     case .remove:
                         stack.remove(at: (index + 1))
                         stack.remove(at: index)
-                        return (result, isPending, description)
+                        return (result, isPending, description, errorDescription)
                     /// attempt to evaluate with an assigned variable
                     case .mathvariable(let stackVariable):
                         var keyValue: Double
@@ -157,15 +179,44 @@ struct CalculatorBrain {
                             description = String(formattedEntryString)
                         }
                     case .opcode(let stackOpcode):
+                        
+                        /// Returns result of pending binary operation:
+                        /// Runs ALU clock on the pending operation with contents
+                        /// from pending operation struct and accumulator;
+                        /// Closes operation by clearing pending status
+                        func performPendingBinaryOperation() {
+                            do {
+                                result = try reportBinaryError(with:
+                                    secondOperand!)
+                            } catch NumericalError.notANumber {
+                                errorDescription = "Not A Number!" +
+                                    "result from " +
+                                    pendingBinaryOperation!.opcode +
+                                    "(" + String(secondOperand!) + ")"
+                                result = sqrt(-1) // force set result.isNaN
+                            } catch NumericalError.infinite {
+                                errorDescription = "infinite! " +
+                                    "result from " +
+                                    pendingBinaryOperation!.opcode +
+                                    "(" + String(secondOperand!) + ")"
+                                result = 1 / 0  // force set result.isInfinite
+                            } catch {
+                                errorDescription =
+                                "unknown Binary error!"
+                            }
+                            pendingBinaryOperation = nil
+                        }
+                        
                         if let operation = operations[stackOpcode] {
                             switch operation {
                             case .undo:
                                 if index > 0 {
-                                stack[index] = .remove
-                                stack[(index - 1)] = .remove
+                                    stack[index] = .remove
+                                    stack[(index - 1)] = .remove
                                 } else {
                                     stack = []
-                                    return (result, isPending, description)
+                                    return (result, isPending, description,
+                                            errorDescription)
                                 }
                             case .random:
                                 let maxPossibleNum = Double(UInt32.max)
@@ -203,7 +254,7 @@ struct CalculatorBrain {
                                             switch previousEntry {
                                             case .remove:
                                                 // should never be here!
-                                                description = "'undo' bug!"
+                                                errorDescription = "'undo' bug!"
                                                 break
                                             case .opcode(let previousString):
                                                 lastEntry = previousString
@@ -235,12 +286,50 @@ struct CalculatorBrain {
                                             subExpression + ")"
                                         description =
                                             description + subExpression
-                                        result = function(secondOperand!)
+                                        do {
+                                            result = try reportUnaryError(with:
+                                                function(secondOperand!))
+                                        } catch NumericalError.notANumber {
+                                            errorDescription = "Not A Number!" +
+                                                "result from " + stackOpcode +
+                                                "(" + String(secondOperand!) +
+                                                ")"
+                                            result = sqrt(-1) // force set
+                                                              // result.isNaN
+                                        } catch NumericalError.infinite {
+                                            errorDescription = "infinite! " +
+                                                "result from " + stackOpcode +
+                                                "(" + String(secondOperand!) +
+                                                ")"
+                                            result = 1 / 0  // force set
+                                                            // result.isInfinite
+                                        } catch {
+                                            errorDescription =
+                                            "unknown Unary error!"
+                                        }
                                         secondOperand = result!
                                     } else {
                                         description = stackOpcode + "(" +
                                             description + ")"
-                                        result = function(result!)
+                                        do {
+                                            result = try reportUnaryError(with:
+                                                function(result!))
+                                        } catch NumericalError.notANumber {
+                                            errorDescription = "Not A Number! " +
+                                                "result from " + stackOpcode +
+                                                "(" + String(result!) + ")"
+                                            result = sqrt(-1) // force set
+                                                              // result.isNaN
+                                        } catch NumericalError.infinite {
+                                            errorDescription = "infinite! " +
+                                                "result from " + stackOpcode +
+                                                "(" + String(result!) + ")"
+                                            result = 1 / 0  // force set
+                                                            // result.isInfinite
+                                        } catch {
+                                            errorDescription =
+                                            "unknown Unary error!"
+                                        }
                                     }
                                     subExpressionDepth += 1
                                 }
@@ -253,7 +342,8 @@ struct CalculatorBrain {
                                     pendingBinaryOperation =
                                         PendingBinaryOperation(
                                             function: function,
-                                            firstOperand: result!)
+                                            firstOperand: result!,
+                                            opcode: stackOpcode)
                                     if stackOpcode == "×" || stackOpcode == "÷" {
                                         description = "(" + description
                                             + ")" + stackOpcode
@@ -288,9 +378,9 @@ struct CalculatorBrain {
                         
                     }
                 }
-                return (result, isPending, description)
+                return (result, isPending, description, errorDescription)
             } else {
-                return (nil, false, "0")
+                return (nil, false, "0", nil)
             }
             
     }
@@ -314,11 +404,9 @@ struct CalculatorBrain {
     }
     
     
-    /// Stores the result of each run of the calculator brain
-    /// but does not share this tuple with the UI - see result, history, etc
-    private var results: (result: Double?, isPending: Bool, description: String)
-        = (nil, false, " ")
     
+    
+    /// DEPRECATE
     /// Accumulator value as a Double if not nil
     var result: Double? {
         get {
@@ -327,6 +415,7 @@ struct CalculatorBrain {
         }
     }
     
+    /// DEPRECATE
     /// Accumulator history as a String if not nil
     var history: String? {
         get {

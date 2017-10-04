@@ -19,6 +19,8 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var mathVariableDisplay: UILabel!
     
+    @IBOutlet weak var errorMessageDisplay: UILabel!
+    
     var userIsInTheMiddleOfTyping = false
     
     /// Character limit of "input" UI
@@ -168,33 +170,33 @@ class ViewController: UIViewController {
             }
         }
     }
-        
-        /// Create calculator ALU, including the accumulator
-        private var brain: CalculatorBrain = CalculatorBrain()
-        
-        /// Catches and handles all non-numerical button actions, eg:
-        /// constants, operators, reset (AKA Clear button)
-        @IBAction func performOperation(_ sender: UIButton) {
+    
+    /// Create calculator ALU, including the accumulator
+    private var brain: CalculatorBrain = CalculatorBrain()
+    
+    /// Catches and handles all non-numerical button actions, eg:
+    /// constants, operators, reset (AKA Clear button)
+    @IBAction func performOperation(_ sender: UIButton) {
         if userIsInTheMiddleOfTyping {
-        // store a new value on the stack
-        brain.setOperand(displayValue)
-        userIsInTheMiddleOfTyping = false
+            // store a new value on the stack
+            brain.setOperand(displayValue)
+            userIsInTheMiddleOfTyping = false
         }
         if let mathematicalSymbol = sender.currentTitle {
-        brain.performOperation(mathematicalSymbol)
+            brain.performOperation(mathematicalSymbol)
         }
         let results = brain.evaluate(using: nil)
         // if brain stack is empty, reset the calculator display to start state.
         // otherwise, since we are at the end of evaluation,
         //     trigger the screen refresh(es)
         screenRefresh(results)
-        }
-        
-        @IBAction func insertMathVariable(_ sender: UIButton) {
+    }
+    
+    @IBAction func insertMathVariable(_ sender: UIButton) {
         let mathVariable = sender.currentTitle!
         
         if userIsInTheMiddleOfTyping {
-        userIsInTheMiddleOfTyping = false
+            userIsInTheMiddleOfTyping = false
         }
         brain.setOperand(variable: mathVariable)
         let results = brain.evaluate(using: nil)
@@ -203,15 +205,15 @@ class ViewController: UIViewController {
         // if brain stack is empty, reset the calculator display to start state.
         // otherwise, trigger the screen refresh(es)
         screenRefresh(results)
-        }
-        
-        @IBAction func setMathVariableValue(_ sender: UIButton) {
+    }
+    
+    @IBAction func setMathVariableValue(_ sender: UIButton) {
         let button = sender.currentTitle!
         let mathVariable = String(button.substring(from:
-        button.index(button.endIndex, offsetBy: -1)))
+            button.index(button.endIndex, offsetBy: -1)))
         
         if userIsInTheMiddleOfTyping {
-        userIsInTheMiddleOfTyping = false
+            userIsInTheMiddleOfTyping = false
         }
         
         displayMathVariableValue = displayValue
@@ -221,15 +223,15 @@ class ViewController: UIViewController {
         // if brain stack is empty, reset the calculator display to start state.
         // otherwise, trigger the screen refresh(es)
         screenRefresh(results)
-        }
-        
-        @IBAction func setUndoAction(_ sender: UIButton) {
+    }
+    
+    @IBAction func setUndoAction(_ sender: UIButton) {
         if userIsInTheMiddleOfTyping {
-        // already handled by touchDigit()
-        return
+            // already handled by touchDigit()
+            return
         }
         if let mathematicalSymbol = sender.currentTitle {
-        brain.performOperation(mathematicalSymbol)
+            brain.performOperation(mathematicalSymbol)
         }
         // run twice to mark, then execute, any "undo" action
         var results = brain.evaluate(using: nil)
@@ -238,29 +240,32 @@ class ViewController: UIViewController {
         // otherwise, since we are at the end of evaluation,
         //     trigger the screen refresh(es)
         screenRefresh(results)
-        }
-        
-        @IBAction func clearMemoryDisplay(_ sender: UIButton) {
+    }
+    
+    @IBAction func clearMemoryDisplay(_ sender: UIButton) {
         displayMathVariableValue = 0
-        }
-        
-        private func screenRefresh(_ results:
-        (result: Double?, isPending: Bool, description: String)) {
+    }
+    
+    private func screenRefresh(_ results:
+        (result: Double?, isPending: Bool, description: String,
+        error: String?)) {
         if let result = results.result {
-        displayValue = result
-        displayHistoryValue = results.description
-        if results.isPending {
-        displayHistoryValue += "..."
+            displayValue = result
+            displayHistoryValue = results.description
+            if results.isPending {
+                displayHistoryValue += "..."
+            } else {
+                displayHistoryValue += "="
+            }
+            displayEntries = 0
+            errorMessageDisplay.text = results.error ?? ""
+            
         } else {
-        displayHistoryValue += "="
+            display.text = "0"
+            displayHistoryValue = " "
+            displayEntries = 0
+            errorMessageDisplay.text = ""
         }
-        displayEntries = 0
-        
-        } else {
-        display.text = "0"
-        displayHistoryValue = " "
-        displayEntries = 0
-        }
-        }
+    }
 }
 
