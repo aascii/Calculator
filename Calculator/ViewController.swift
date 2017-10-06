@@ -9,20 +9,20 @@
 import UIKit
 
 class ViewController: UIViewController {
-    
+
     /// Element used for operand input as well as displaying operation results
     /// Note: AKA "input UI" || "results UI"
     @IBOutlet weak var display: UILabel!
     /// Element used for displaying running historical log of operand+operations
     /// Note: AKA "history UI"
     @IBOutlet weak var inputHistoryDisplay: UILabel!
-    
+
     @IBOutlet weak var mathVariableDisplay: UILabel!
-    
+
     @IBOutlet weak var errorMessageDisplay: UILabel!
-    
+
     var userIsInTheMiddleOfTyping = false
-    
+
     /// Character limit of "input" UI
     let displayLength = 16
     /// Element tracking current "input" operand string length
@@ -30,27 +30,28 @@ class ViewController: UIViewController {
     /// Element tracking number of "input" operand decimal places
     /// to allow "0" vales after "."
     var displayDecimalPlacesUsed = 0
-    
+
     /// Constants for formatting display elements
     let maxIntDigits = 9
     let minFracDigits = 0
     let maxFracDigits = 6
-    
+
     /// Catches & handles numerical button actions in preparation to set operand
     /// Note:  Does NOT modify brain properties
     @IBAction func touchDigit(_ sender: UIButton) {
         let digit = sender.currentTitle!
-        
+
         if userIsInTheMiddleOfTyping {
             if displayEntries < displayLength {
-                if (digit != "." ||
-                    (digit == "." && (display.text!.contains(".") == false))
-                    ) {
+                if digit != "." ||
+                    (digit == "." && (display.text!.contains(".") == false)) {
                     var textCurrentlyInDisplay = display.text!
                     let rawStringValue = textCurrentlyInDisplay + digit
                     switch digit {
                     case "⬅︎", "Undo":
-                        textCurrentlyInDisplay.remove(at: textCurrentlyInDisplay.index(before: textCurrentlyInDisplay.endIndex))
+                        textCurrentlyInDisplay.remove(at:
+                            textCurrentlyInDisplay.index(before:
+                                textCurrentlyInDisplay.endIndex))
                         if textCurrentlyInDisplay == "" {
                             textCurrentlyInDisplay = "0"
                         }
@@ -68,6 +69,8 @@ class ViewController: UIViewController {
                             display.text = rawStringValue
                             displayDecimalPlacesUsed += 1
                         } else {
+                            // a reasonable usage for falling through
+                            //swiftlint:disable:next fallthrough
                             fallthrough
                         }
                     default:
@@ -107,7 +110,7 @@ class ViewController: UIViewController {
             }
         }
     }
-    
+
     var displayValue: Double {
         // Returns the prepared operand value from "input" UI
         get {
@@ -133,7 +136,7 @@ class ViewController: UIViewController {
             }
         }
     }
-    
+
     var displayHistoryValue: String {
         // Returns the prepared historical log
         get {
@@ -145,7 +148,7 @@ class ViewController: UIViewController {
             inputHistoryDisplay.text = newValue
         }
     }
-    
+
     var displayMathVariableValue: Double {
         // Returns the prepared operand value from "math variable" UI
         get {
@@ -170,10 +173,10 @@ class ViewController: UIViewController {
             }
         }
     }
-    
+
     /// Create calculator ALU, including the accumulator
     private var brain: CalculatorBrain = CalculatorBrain()
-    
+
     /// Catches and handles all non-numerical button actions, eg:
     /// constants, operators, reset (AKA Clear button)
     @IBAction func performOperation(_ sender: UIButton) {
@@ -191,40 +194,39 @@ class ViewController: UIViewController {
         //     trigger the screen refresh(es)
         screenRefresh(results)
     }
-    
+
     @IBAction func insertMathVariable(_ sender: UIButton) {
         let mathVariable = sender.currentTitle!
-        
+
         if userIsInTheMiddleOfTyping {
             userIsInTheMiddleOfTyping = false
         }
         brain.setOperand(variable: mathVariable)
         let results = brain.evaluate(using: nil)
-        
-        
+
         // if brain stack is empty, reset the calculator display to start state.
         // otherwise, trigger the screen refresh(es)
         screenRefresh(results)
     }
-    
+
     @IBAction func setMathVariableValue(_ sender: UIButton) {
         let button = sender.currentTitle!
         let mathVariable = String(button.substring(from:
             button.index(button.endIndex, offsetBy: -1)))
-        
+
         if userIsInTheMiddleOfTyping {
             userIsInTheMiddleOfTyping = false
         }
-        
+
         displayMathVariableValue = displayValue
-        
+
         let results = brain.evaluate(using: [mathVariable!: displayValue])
-        
+
         // if brain stack is empty, reset the calculator display to start state.
         // otherwise, trigger the screen refresh(es)
         screenRefresh(results)
     }
-    
+
     @IBAction func setUndoAction(_ sender: UIButton) {
         if userIsInTheMiddleOfTyping {
             // already handled by touchDigit()
@@ -241,11 +243,11 @@ class ViewController: UIViewController {
         //     trigger the screen refresh(es)
         screenRefresh(results)
     }
-    
+
     @IBAction func clearMemoryDisplay(_ sender: UIButton) {
         displayMathVariableValue = 0
     }
-    
+
     private func screenRefresh(_ results:
         (result: Double?, isPending: Bool, description: String,
         error: String?)) {
@@ -259,7 +261,7 @@ class ViewController: UIViewController {
             }
             displayEntries = 0
             errorMessageDisplay.text = results.error ?? ""
-            
+
         } else {
             display.text = "0"
             displayHistoryValue = " "
@@ -268,4 +270,3 @@ class ViewController: UIViewController {
         }
     }
 }
-
