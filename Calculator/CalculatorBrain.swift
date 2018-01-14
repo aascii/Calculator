@@ -229,17 +229,17 @@ struct CalculatorBrain {
                                                 errorDescription = "'undo' bug!"
                                             case .opcode(let previousString):
                                                 lastEntry = previousString
-                                                charsToRemove = lastEntry.characters.count
+                                                charsToRemove = lastEntry.count
                                             case .number(let previousNumber):
                                                 lastEntry = formatEntry(previousNumber)
-                                                charsToRemove = lastEntry.characters.count
+                                                charsToRemove = lastEntry.count
                                             case .mathvariable(let previousVariable):
                                                 lastEntry = previousVariable
-                                                charsToRemove = lastEntry.characters.count
+                                                charsToRemove = lastEntry.count
                                             }
                                             subExpression = lastEntry
                                         } else {
-                                            charsToRemove = subExpression.characters.count
+                                            charsToRemove = subExpression.count
                                         }
                                         let rangeToRemove =
                                             description.index(description.endIndex,
