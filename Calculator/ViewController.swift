@@ -43,23 +43,17 @@ class ViewController: UIViewController {
 
         if userIsInTheMiddleOfTyping {
             if displayEntries < displayLength {
-                if digit != "." ||
-                    (digit == "." && (display.text!.contains(".") == false)) {
+                if digit != "." || (digit == "." && (display.text!.contains(".") == false)) {
                     var textCurrentlyInDisplay = display.text!
                     let rawStringValue = textCurrentlyInDisplay + digit
                     switch digit {
                     case "⬅︎", "Undo":
-                        textCurrentlyInDisplay.remove(at:
-                            textCurrentlyInDisplay.index(before:
-                                textCurrentlyInDisplay.endIndex))
-                        if textCurrentlyInDisplay == "" {
-                            textCurrentlyInDisplay = "0"
-                        }
+                        textCurrentlyInDisplay.remove(at: textCurrentlyInDisplay.index(before:
+                            textCurrentlyInDisplay.endIndex))
+                        if textCurrentlyInDisplay == "" { textCurrentlyInDisplay = "0" }
                         display.text = textCurrentlyInDisplay
                         displayEntries -= 2
-                        if textCurrentlyInDisplay.contains(".") {
-                            displayDecimalPlacesUsed -= 1
-                        }
+                        if textCurrentlyInDisplay.contains(".") { displayDecimalPlacesUsed -= 1 }
                     case ".":
                         display.text = rawStringValue
                         displayDecimalPlacesUsed = 0
@@ -78,11 +72,9 @@ class ViewController: UIViewController {
                         formatTextInDisplay.maximumIntegerDigits = maxIntDigits
                         formatTextInDisplay.minimumFractionDigits = minFracDigits
                         formatTextInDisplay.maximumFractionDigits = maxFracDigits
-                        let formattedTextNumber =
-                            formatTextInDisplay.number(from: rawStringValue)
+                        let formattedTextNumber = formatTextInDisplay.number(from: rawStringValue)
                         let formattedText = formatTextInDisplay.string(from: formattedTextNumber!)
-                        if display.text!.contains(".") &&
-                            displayDecimalPlacesUsed < maxFracDigits {
+                        if display.text!.contains(".") && displayDecimalPlacesUsed < maxFracDigits {
                             display.text = formattedText!
                             displayDecimalPlacesUsed += 1
                         } else if display.text!.contains(".") == false {

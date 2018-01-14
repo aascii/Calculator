@@ -90,9 +90,7 @@ struct CalculatorBrain {
     func evaluate(using variables: [String: Double]? = nil)
         -> (result: Double?, isPending: Bool, description: String, error: String?) {
             if variables != nil {
-                for (key, value) in variables! {
-                    variablesInMemory[key] = value
-                }
+                for (key, value) in variables! { variablesInMemory[key] = value }
             }
             if stack.isEmpty == false {
 
@@ -113,31 +111,21 @@ struct CalculatorBrain {
                     let firstOperand: Double
                     let opcode: String
 
-                    func perform(with secondOperand: Double) -> Double {
-                        return function(firstOperand, secondOperand)
-                    }
+                    func perform(with secondOperand: Double) -> Double { return function(firstOperand, secondOperand) }
                 }
 
                 func reportUnaryError(with numericalValue: Double) throws
                     -> Double {
-                        if numericalValue.isNaN {
-                            throw NumericalError.notANumber
-                        }
-                        if numericalValue.isInfinite {
-                            throw NumericalError.infinite
-                        }
+                        if numericalValue.isNaN { throw NumericalError.notANumber }
+                        if numericalValue.isInfinite { throw NumericalError.infinite }
                         return numericalValue
                 }
 
                 func reportBinaryError(with numericalValue: Double) throws
                     -> Double {
                         let resultValue = pendingBinaryOperation!.perform(with: numericalValue)
-                        if resultValue.isNaN {
-                            throw NumericalError.notANumber
-                        }
-                        if resultValue.isInfinite {
-                            throw NumericalError.infinite
-                        }
+                        if resultValue.isNaN { throw NumericalError.notANumber }
+                        if resultValue.isInfinite { throw NumericalError.infinite }
                         return resultValue
                 }
 
@@ -154,15 +142,10 @@ struct CalculatorBrain {
                     /// attempt to evaluate with an assigned variable
                     case .mathvariable(let stackVariable):
                         var keyValue: Double
-                        if let substituteValue =
-                            variablesInMemory[stackVariable] {
+                        if let substituteValue = variablesInMemory[stackVariable] {
                             keyValue = substituteValue
-                        } else {
-                            keyValue = 0
-                        }
-                        if isPending && secondOperand != nil {
-                            isPending = false
-                        }
+                        } else { keyValue = 0 }
+                        if isPending && secondOperand != nil { isPending = false }
                         if isPending {
                             secondOperand = keyValue
                             description += String(stackVariable)
@@ -172,9 +155,7 @@ struct CalculatorBrain {
                         }
                     case .number(let stackNumber):
                         let formattedEntryString = formatEntry(stackNumber)
-                        if isPending && secondOperand != nil {
-                            isPending = false
-                        }
+                        if isPending && secondOperand != nil { isPending = false }
                         if isPending {
                             secondOperand = stackNumber
                             description += String(formattedEntryString)
@@ -218,9 +199,7 @@ struct CalculatorBrain {
                             case .random:
                                 let maxPossibleNum = Double(UInt32.max)
                                 let arc4randomNum = Double(arc4random())
-                                if isPending && secondOperand != nil {
-                                    isPending = false
-                                }
+                                if isPending && secondOperand != nil { isPending = false }
                                 if isPending {
                                     secondOperand = arc4randomNum / maxPossibleNum
                                     description += stackOpcode
@@ -229,9 +208,7 @@ struct CalculatorBrain {
                                     description = stackOpcode
                                 }
                             case .constant(let numericalValue):
-                                if isPending && secondOperand != nil {
-                                    isPending = false
-                                }
+                                if isPending && secondOperand != nil { isPending = false }
                                 if isPending {
                                     secondOperand = numericalValue
                                     description += stackOpcode
@@ -264,8 +241,9 @@ struct CalculatorBrain {
                                         } else {
                                             charsToRemove = subExpression.characters.count
                                         }
-                                        let rangeToRemove = description.index(description.endIndex,
-                                                offsetBy: -charsToRemove)..<description.endIndex
+                                        let rangeToRemove =
+                                            description.index(description.endIndex,
+                                                              offsetBy: -charsToRemove)..<description.endIndex
                                         description.removeSubrange(rangeToRemove)
                                         subExpression = stackOpcode + "(" + subExpression + ")"
                                         description += subExpression
@@ -358,8 +336,7 @@ struct CalculatorBrain {
         formatTextFromStack.maximumIntegerDigits = 9
         formatTextFromStack.minimumFractionDigits = 0
         formatTextFromStack.maximumFractionDigits = 6
-        if let formattedTextNumber =
-            formatTextFromStack.number(from: rawStringValue) {
+        if let formattedTextNumber = formatTextFromStack.number(from: rawStringValue) {
             let formattedText = formatTextFromStack.string(from: formattedTextNumber)
             return formattedText!
         } else {
